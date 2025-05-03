@@ -26,3 +26,15 @@ def duplicate_logic(x):
     if x > 10:
         return "big"
     return "small"
+
+
+def print_score(score):
+    if score > 90:
+        print("Excellent")
+
+
+def print_size(x):
+    if x > 10:
+        print("Big")
+    elif x > 5:
+        print("Medium")
