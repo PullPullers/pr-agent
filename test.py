@@ -31,6 +31,8 @@ def duplicate_logic(x):
 def print_score(score):
     if score > 90:
         print("Excellent")
+    if score > 90:
+        print("Excellent")
 
 
 def print_size(x):
@@ -38,3 +40,19 @@ def print_size(x):
         print("Big")
     elif x > 5:
         print("Medium")
+    # else 누락
+
+
+def get_discount(price):
+    if price > 1000:
+        return price * 0.9
+
+
+def debug_mode():
+    DEBUG = True
+    print("Debugging...")
+
+
+def empty_handler():
+    # TODO
+    pass
