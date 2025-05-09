@@ -62,3 +62,7 @@ def broken_function():
    y = 20
   if x < y:
      print("broken")  
+     
+def bad_yaml_prompt():
+    print("- a")
+    print("-b")
