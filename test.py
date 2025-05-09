@@ -56,3 +56,9 @@ def debug_mode():
 def empty_handler():
     # TODO
     pass
+
+def broken_function():
+  x = 10
+   y = 20
+  if x < y:
+     print("broken")  
