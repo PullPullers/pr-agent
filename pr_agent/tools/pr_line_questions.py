@@ -61,8 +61,13 @@ class PR_LineQuestions:
         #     self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
 
         # set conversation history if enabled
-        if self.use_conversation_history:
-            self._load_conversation_history()
+        try:
+            if self.use_conversation_history:
+                self._load_conversation_history()
+            else:
+                get_logger().info("Conversation history is disabled.")
+        except Exception as e:
+            get_logger().warning(f"Failed to load conversation history: {e}")
 
         self.patch_with_lines = ""
         ask_diff = get_settings().get('ask_diff_hunk', "")
