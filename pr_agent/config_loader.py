@@ -5,34 +5,37 @@ from typing import Optional
 from dynaconf import Dynaconf
 from starlette_context import context
 
-PR_AGENT_TOML_KEY = 'pr-agent'
+PR_AGENT_TOML_KEY = "pr-agent"
 
 current_dir = dirname(abspath(__file__))
 global_settings = Dynaconf(
     envvar_prefix=False,
     merge_enabled=True,
-    settings_files=[join(current_dir, f) for f in [
-        "settings/configuration.toml",
-        "settings/ignore.toml",
-        "settings/language_extensions.toml",
-        "settings/pr_reviewer_prompts.toml",
-        "settings/pr_questions_prompts.toml",
-        "settings/pr_line_questions_prompts.toml",
-        "settings/pr_description_prompts.toml",
-        "settings/code_suggestions/pr_code_suggestions_prompts.toml",
-        "settings/code_suggestions/pr_code_suggestions_prompts_not_decoupled.toml",
-        "settings/code_suggestions/pr_code_suggestions_reflect_prompts.toml",
-        "settings/pr_information_from_user_prompts.toml",
-        "settings/pr_update_changelog_prompts.toml",
-        "settings/pr_custom_labels.toml",
-        "settings/pr_add_docs.toml",
-        "settings/custom_labels.toml",
-        "settings/pr_help_prompts.toml",
-        "settings/pr_help_docs_prompts.toml",
-        "settings/pr_help_docs_headings_prompts.toml",
-        "settings/.secrets.toml",
-        "settings_prod/.secrets.toml",
-    ]]
+    settings_files=[
+        join(current_dir, f)
+        for f in [
+            "settings/configuration.toml",
+            "settings/ignore.toml",
+            "settings/language_extensions.toml",
+            "settings/pr_reviewer_prompts.toml",
+            "settings/pr_questions_prompts.toml",
+            "settings/pr_line_questions_prompts.toml",
+            "settings/pr_description_prompts.toml",
+            "settings/code_suggestions/pr_code_suggestions_prompts.toml",
+            "settings/code_suggestions/pr_code_suggestions_prompts_not_decoupled.toml",
+            "settings/code_suggestions/pr_code_suggestions_reflect_prompts.toml",
+            "settings/pr_information_from_user_prompts.toml",
+            "settings/pr_update_changelog_prompts.toml",
+            "settings/pr_custom_labels.toml",
+            "settings/pr_add_docs.toml",
+            "settings/custom_labels.toml",
+            "settings/pr_help_prompts.toml",
+            "settings/pr_help_docs_prompts.toml",
+            "settings/pr_help_docs_headings_prompts.toml",
+            "settings/.secrets.toml",
+            "settings_prod/.secrets.toml",
+        ]
+    ],
 )
 
 
@@ -80,4 +83,17 @@ def _find_pyproject() -> Optional[Path]:
 
 pyproject_path = _find_pyproject()
 if pyproject_path is not None:
-    get_settings().load_file(pyproject_path, env=f'tool.{PR_AGENT_TOML_KEY}')
+    get_settings().load_file(pyproject_path, env=f"tool.{PR_AGENT_TOML_KEY}")
+
+
+def get_scan_patterns() -> list[str]:
+    """
+    Reads the scan_patterns from the loaded settings (Dynaconf).
+
+    Returns:
+        list of patterns like ["TODO", "FIXME"]
+    """
+    try:
+        return get_settings().pr_description.get("scan_patterns", ["TODO", "FIXME"])
+    except Exception:
+        return ["TODO", "FIXME"]
