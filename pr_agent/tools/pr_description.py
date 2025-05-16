@@ -809,7 +809,11 @@ class PRDescription:
                 pr_body += f"{value}\n"
             if idx < len(self.data) - 1:
                 pr_body += "\n\n___\n\n"
-
+                # TODOs Found in Diff
+            if self.vars.get("scan_results"):
+                pr_body += "\n\n### 🔧 TODOs Found in Diff\n"
+                for line in self.vars["scan_results"]:
+                    pr_body += f"- {line}\n"
         return (
             title,
             pr_body,
