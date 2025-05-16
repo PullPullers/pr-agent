@@ -360,4 +360,6 @@ pr_commands = [
     "/review",
     "/improve",
 ]
-# modified
+
+[pr_description]
+scan_patterns = ["TODO", "FIXME"]
