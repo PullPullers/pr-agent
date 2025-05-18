@@ -443,7 +443,7 @@ class PRReviewer:
              elif line.startswith('+') and real_line_num is not None:
                 real_line_num += 1
                 code_line = line[1:]
-                todo_match = re.search(r'(?:#|//|;)?\s*TODO\b(.*)', code_line, re.IGNORECASE)
+                todo_match = re.search(r'(?:#|//|;)\s*TODO\b(.*)', code_line, re.IGNORECASE)
                 if todo_match:
                     content = todo_match.group(1).strip(' :#')
                     todos.append((real_line_num, content))
