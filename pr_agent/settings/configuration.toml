@@ -6,8 +6,8 @@
 
 [config]
 # models
-model="o4-mini"
-fallback_models=["gpt-4.1"]
+model="gemini/gemini-1.5-flash"
+fallback_models=["gemini/gemini-1.5-flash-latest"]
 #model_reasoning="o4-mini" # dedictated reasoning model for self-reflection
 #model_weak="gpt-4o" # optional, a weaker model to use for some easier tasks
 # CLI
