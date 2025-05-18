@@ -54,7 +54,7 @@ def debug_mode():
 
 
 def empty_handler():
-    # TODO
+    # TODO 테스트
     pass
 
 def broken_function():
@@ -64,5 +64,7 @@ def broken_function():
      print("broken")  
      
 def bad_yaml_prompt():
+    # todo test 
+    # todo todo 
     print("- a")
     print("-b")
