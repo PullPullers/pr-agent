@@ -543,22 +543,21 @@ class AzureDevopsProvider(GitProvider):
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, str, int]:
         parsed_url = urlparse(pr_url)
-
         path_parts = parsed_url.path.strip("/").split("/")
-        if "pullrequest" not in path_parts:
-            raise ValueError(
-                "The provided URL does not appear to be a Azure DevOps PR URL"
-            )
-        if len(path_parts) == 6:  # "https://dev.azure.com/organization/project/_git/repo/pullrequest/1"
-            workspace_slug = path_parts[1]
-            repo_slug = path_parts[3]
-            pr_number = int(path_parts[5])
-        elif len(path_parts) == 5:  # 'https://organization.visualstudio.com/project/_git/repo/pullrequest/1'
-            workspace_slug = path_parts[0]
-            repo_slug = path_parts[2]
-            pr_number = int(path_parts[4])
-        else:
-            raise ValueError("The provided URL does not appear to be a Azure DevOps PR URL")
+        num_parts = len(path_parts)
+        if num_parts < 5:
+            raise ValueError("The provided URL has insufficient path components for an Azure DevOps PR URL")
+        
+        # Verify that the second-to-last path component is "pullrequest"
+        if path_parts[num_parts - 2] != "pullrequest":
+            raise ValueError("The provided URL does not follow the expected Azure DevOps PR URL format")
+
+        workspace_slug = path_parts[num_parts - 5]
+        repo_slug = path_parts[num_parts - 3]
+        try:
+            pr_number = int(path_parts[num_parts - 1])
+        except ValueError as e:
+            raise ValueError("Cannot parse PR number in the provided URL") from e
 
         return workspace_slug, repo_slug, pr_number
 

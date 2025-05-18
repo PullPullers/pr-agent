@@ -172,8 +172,8 @@ To use [Google AI Studio](https://aistudio.google.com/) models, set the relevant
 
 ```toml
 [config] # in configuration.toml
-model="google_ai_studio/gemini-1.5-flash"
-fallback_models=["google_ai_studio/gemini-1.5-flash"]
+model="gemini/gemini-1.5-flash"
+fallback_models=["gemini/gemini-1.5-flash"]
 
 [google_ai_studio] # in .secrets.toml
 gemini_api_key = "..."
@@ -277,6 +277,22 @@ key = "..." # your Codestral api key
 ```
 
 (you can obtain a Codestral key from [here](https://console.mistral.ai/codestral))
+
+### Openrouter
+
+To use model from Openrouter, for example, set:
+
+```toml
+[config] # in configuration.toml 
+model="openrouter/anthropic/claude-3.7-sonnet"
+fallback_models=["openrouter/deepseek/deepseek-chat"]
+custom_model_max_tokens=20000
+
+[openrouter]  # in .secrets.toml or passed an environment variable openrouter__key
+key = "..." # your openrouter api key
+```
+
+(you can obtain an Openrouter API key from [here](https://openrouter.ai/settings/keys))
 
 ### Custom models
 

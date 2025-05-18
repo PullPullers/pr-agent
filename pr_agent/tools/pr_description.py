@@ -715,6 +715,7 @@ class PRDescription:
                 pr_type = f"{ai_header}{ai_type}"
             body = body.replace("pr_agent:type", pr_type)
 
+
         ai_summary = self.data.get("description")
         if ai_summary and not re.search(r"<!--\s*pr_agent:summary\s*-->", body):
             summary = f"{ai_header}{ai_summary}"

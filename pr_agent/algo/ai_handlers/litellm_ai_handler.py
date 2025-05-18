@@ -118,6 +118,18 @@ class LiteLLMAIHandler(BaseAiHandler):
             litellm.api_base = self.api_base
             openai.api_base = self.api_base
 
+        # Support for Openrouter models
+        if get_settings().get("OPENROUTER.KEY", None):
+            openrouter_api_key = get_settings().get("OPENROUTER.KEY", None)
+            os.environ["OPENROUTER_API_KEY"] = openrouter_api_key
+            litellm.api_key = openrouter_api_key
+            openai.api_key = openrouter_api_key
+
+            openrouter_api_base = get_settings().get("OPENROUTER.API_BASE", "https://openrouter.ai/api/v1")
+            os.environ["OPENROUTER_API_BASE"] = openrouter_api_base
+            self.api_base = openrouter_api_base
+            litellm.api_base = openrouter_api_base
+
         # Models that only use user meessage
         self.user_message_only_models = USER_MESSAGE_ONLY_MODELS
 
