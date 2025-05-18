@@ -11,8 +11,10 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import (add_ai_metadata_to_diff_files,
                                          get_pr_diff,
-                                         retry_with_fallback_models)
+                                         retry_with_fallback_models,
+                                         get_todo_sections)
 from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.algo.types import EDIT_TYPE
 from pr_agent.algo.utils import (ModelType, PRReviewHeader,
                                  convert_to_markdown_v2, github_action_output,
                                  load_yaml, show_relevant_configurations)
@@ -244,6 +246,16 @@ class PRReviewer:
             last_commit_url = f"{self.git_provider.get_pr_url()}/commits/" \
                               f"{self.git_provider.incremental.first_new_commit_sha}"
             incremental_review_markdown_text = f"Starting from commit {last_commit_url}"
+        
+        # TODO Scanner
+        review_todo_sections = []
+        for file in self.git_provider.get_diff_files():
+            if file.edit_type == EDIT_TYPE.DELETED:
+                continue
+            todo_sections = get_todo_sections(file.patch, file.filename)
+            if todo_sections:
+                review_todo_sections.extend(todo_sections)
+        data["review"]["TODO_sections"] = review_todo_sections
 
         markdown_text = convert_to_markdown_v2(data, self.git_provider.is_supported("gfm_markdown"),
                                             incremental_review_markdown_text,
