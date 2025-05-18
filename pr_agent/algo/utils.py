@@ -131,6 +131,7 @@ def convert_to_markdown_v2(output_data: dict,
         "Focused PR": "✨",
         "Relevant ticket": "🎫",
         "Security concerns": "🔒",
+        "Todo sections": "🔒",
         "Insights from user's answers": "📝",
         "Code feedback": "🤖",
         "Estimated effort to review [1-5]": "⏱️",
@@ -209,6 +210,49 @@ def convert_to_markdown_v2(output_data: dict,
                     markdown_text += f"### {emoji} Security concerns\n\n"
                     value = emphasize_header(value.strip(), only_markdown=True)
                     markdown_text += f"{value}\n\n"
+
+        elif 'todo sections' in key_nice.lower():
+            if gfm_supported:
+                markdown_text += f"<tr><td>"
+                if is_value_no(value):
+                    markdown_text += f"{emoji}&nbsp;<strong>No ToDo sections</strong>"
+                else:
+                    markdown_text += f"{emoji}&nbsp;<strong>ToDo sections</strong><br><br>\n\n"
+
+                    if isinstance(value, list):
+                        markdown_text += "<ul>\n"
+                        for todo_item in value:
+                            file_name = todo_item.get('file', '')
+                            line_number = todo_item.get('line', '')
+                            content = todo_item.get('content', '')
+                            reference_link = None
+
+                            if git_provider and file_name and line_number:
+                                reference_link = git_provider.get_line_link(file_name, line_number, line_number)
+                            
+                            file_line = f"{file_name} [{line_number}]"
+
+                            if reference_link:
+                                file_line = f"<a href='{reference_link}'>{file_line}</a>"
+
+                            markdown_text += f"<li>{file_line}: {content}</li>\n"
+
+                    markdown_text += "</ul>\n"
+                markdown_text += f"</td></tr>\n"
+            else:
+                if is_value_no(value):
+                    markdown_text += f"### {emoji} No ToDo sections\n\n"
+                else:
+                    markdown_text += f"### {emoji} ToDo sections\n\n"
+                    if isinstance(value, list):
+                        for todo_item in value:
+                            file_name = todo_item.get('file', '')
+                            line_number = todo_item.get('line', '')
+                            content = todo_item.get('content', '')
+                            markdown_text += f"- {file_name} [{line_number}]: {content}\n"
+                    else:
+                        markdown_text += f"{value}\n\n"
+
         elif 'can be split' in key_nice.lower():
             if gfm_supported:
                 markdown_text += f"<tr><td>"

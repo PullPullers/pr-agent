@@ -232,6 +232,19 @@ class PRReviewer:
         if 'review' not in data:
             get_logger().exception("Failed to parse review data", artifact={"data": data})
             return ""
+        
+
+        files = self.git_provider.get_diff_files()
+        get_logger().debug(f"Files", files=files)
+        todo_items = self.scan_todo_comments(files)
+        get_logger().debug(f"Todo items", todo_items=todo_items)
+
+        if todo_items:
+            data['review']['todo_sections'] = todo_items
+            get_logger().debug(f"Todo sections", todo_items=todo_items)
+        else:
+            data['review']['todo_sections'] = []
+            get_logger().debug(f"No todo sections")
 
         # move data['review'] 'key_issues_to_review' key to the end of the dictionary
         if 'key_issues_to_review' in data['review']:
@@ -415,3 +428,49 @@ class PRReviewer:
             get_logger().info("Auto-approval option is disabled")
             self.git_provider.publish_comment("Auto-approval option for PR-Agent is disabled. "
                                               "You can enable it via a [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md#auto-approval-1)")
+    
+    def parse_patch_for_todos(self, file):
+        import re
+        patch_lines = file.patch.splitlines()
+        todos = []
+        real_line_num = None
+
+        for line in patch_lines:
+             if line.startswith('@@'):
+                match = re.match(r"@@ -\d+(?:,\d+)? \+(\d+)", line)
+                if match:
+                    real_line_num = int(match.group(1)) - 1
+             elif line.startswith('+') and real_line_num is not None:
+                real_line_num += 1
+                code_line = line[1:]
+                todo_match = re.search(r'(?:#|//|;)?\s*TODO\b(.*)', code_line, re.IGNORECASE)
+                if todo_match:
+                    content = todo_match.group(1).strip(' :#')
+                    todos.append((real_line_num, content))
+             elif not line.startswith('-') and real_line_num is not None:
+                real_line_num += 1
+        
+        return todos
+
+
+    def scan_todo_comments(self, files):
+        
+        todo_items = []
+        for file in files:
+            patch = getattr(file, 'patch', None)
+            if not patch:
+                continue
+
+            file_name = getattr(file, 'filename', None)
+            if not file_name:
+                continue
+
+            todos = self.parse_patch_for_todos(file)
+            for line_num, content in todos:        
+                todo_items.append({
+                    'file': file_name,
+                    'line': line_num,
+                    'content': content if content else 'No description',
+                  
+                })
+        return todo_items
