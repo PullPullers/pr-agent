@@ -212,6 +212,7 @@ def convert_to_markdown_v2(output_data: dict,
                     markdown_text += f"{value}\n\n"
 
         elif 'todo sections' in key_nice.lower():
+            value = str(value).strip()
             if gfm_supported:
                 markdown_text += f"<tr><td>"
                 if is_value_no(value):

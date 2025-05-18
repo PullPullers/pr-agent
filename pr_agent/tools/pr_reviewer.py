@@ -243,7 +243,7 @@ class PRReviewer:
             data['review']['todo_sections'] = todo_items
             get_logger().debug(f"Todo sections", todo_items=todo_items)
         else:
-            data['review']['todo_sections'] = []
+            data['review']['todo_sections'] = "no"
             get_logger().debug(f"No todo sections")
 
         # move data['review'] 'key_issues_to_review' key to the end of the dictionary
