@@ -35,6 +35,7 @@ class PR_LineQuestions:
             "question": self.question_str,
             "full_hunk": "",
             "selected_lines": "",
+            "conversation_history": "",  
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
@@ -42,6 +43,9 @@ class PR_LineQuestions:
                                           get_settings().pr_line_questions_prompt.user)
         self.patches_diff = None
         self.prediction = None
+        
+        # get settings for use conversation history
+        self.use_conversation_history = get_settings().pr_questions.use_conversation_history
 
     def parse_args(self, args):
         if args and len(args) > 0:
@@ -55,6 +59,15 @@ class PR_LineQuestions:
         get_logger().info('Answering a PR lines question...')
         # if get_settings().config.publish_output:
         #     self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
+
+        # set conversation history if enabled
+        try:
+            if self.use_conversation_history:
+                self._load_conversation_history()
+            else:
+                get_logger().info("Conversation history is disabled.")
+        except Exception as e:
+            get_logger().warning(f"Failed to load conversation history: {e}")
 
         self.patch_with_lines = ""
         ask_diff = get_settings().get('ask_diff_hunk', "")
@@ -92,6 +105,73 @@ class PR_LineQuestions:
                 self.git_provider.publish_comment(model_answer_sanitized)
 
         return ""
+        
+    def _load_conversation_history(self):
+        """generate conversation history from the code review thread"""
+        try:
+            comment_id = get_settings().get('comment_id', '')
+            file_path = get_settings().get('file_name', '')
+            line_number = get_settings().get('line_end', '')
+            
+            # return if no comment id or file path and line number
+            if not (comment_id or (file_path and line_number)):
+                return
+
+            # initialize conversation history
+            conversation_history = []
+            
+            if hasattr(self.git_provider, 'get_review_thread_comments') and comment_id:
+                try:
+                    # get review thread comments
+                    thread_comments = self.git_provider.get_review_thread_comments(comment_id)
+                    
+                    # current question id (this question is excluded from the context)
+                    current_question_id = comment_id
+                    
+                    # generate conversation history from the comments
+                    for comment in thread_comments:
+                        # skip empty comments
+                        body = getattr(comment, 'body', '')
+                        if not body or not body.strip():
+                            continue
+                        
+                        # except for current question
+                        # except for current question
+                        if current_question_id and comment.id == current_question_id:
+                        
+                        # remove the AI command (/ask etc) from the beginning of the comment (optional)
+                        clean_body = body
+                        if clean_body.startswith('/'):
+                            clean_body = clean_body.split('\n', 1)[-1] if '\n' in clean_body else ''
+                            
+                        if not clean_body.strip():
+                            continue
+                            
+                        # author info
+                        user = comment.user
+                        author = user.login if hasattr(user, 'login') else 'Unknown'
+                        
+                        # confirm if the author is the current user (AI vs user)
+                        is_ai = 'bot' in author.lower() or '[bot]' in author.lower()
+                        role = 'AI' if is_ai else 'User'
+                        
+                        # append to the conversation history
+                        conversation_history.append(f"{role} ({author}): {clean_body}")
+                    
+                    # transform the conversation history to a string
+                    if conversation_history:
+                        self.vars["conversation_history"] = "\n\n".join(conversation_history)
+                        get_logger().info(f"Loaded {len(conversation_history)} comments from the code review thread")
+                    else:
+                        self.vars["conversation_history"] = ""
+                        
+                except Exception as e:
+                    get_logger().warning(f"Failed to get review thread comments: {e}")
+                    self.vars["conversation_history"] = ""
+        
+        except Exception as e:
+            get_logger().error(f"Error loading conversation history: {e}")
+            self.vars["conversation_history"] = ""
 
     async def _get_prediction(self, model: str):
         variables = copy.deepcopy(self.vars)
