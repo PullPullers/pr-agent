@@ -8,6 +8,7 @@ from typing import List, Tuple
 import yaml
 from jinja2 import Environment, StrictUndefined
 from pr_agent.tools.todo_comment_scanner import TODOCommentScanner
+from pr_agent.algo.pr_processing import get_pr_diff
 from pr_agent.config_loader import get_scan_patterns
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
@@ -146,7 +147,7 @@ class PRDescription:
 
             patterns = get_scan_patterns()
             scanner = TODOCommentScanner(patterns)
-            diff_str = self.git_provider.get_pr_diff()
+            diff_str = self.patches_diff or ""
             scan_results = scanner.scan(diff_str)
             if scan_results:
                 self.vars["scan_results"] = scan_results[:10]
