@@ -90,6 +90,9 @@ minimal_commits_for_incremental_review=0
 minimal_minutes_for_incremental_review=0
 enable_intro_text=true
 enable_help_text=false # Determines whether to include help text in the PR review. Enabled by default.
+# TODO pattern scan added
+scan_patterns = ["TODO", "FIXME"]
+
 
 [pr_description] # /describe #
 publish_labels=false
