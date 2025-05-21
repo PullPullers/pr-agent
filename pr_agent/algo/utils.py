@@ -131,6 +131,7 @@ def convert_to_markdown_v2(output_data: dict,
         "Focused PR": "✨",
         "Relevant ticket": "🎫",
         "Security concerns": "🔒",
+        "Todo sections": "✅",
         "Insights from user's answers": "📝",
         "Code feedback": "🤖",
         "Estimated effort to review [1-5]": "⏱️",
@@ -267,6 +268,11 @@ def convert_to_markdown_v2(output_data: dict,
                         get_logger().exception(f"Failed to process 'Recommended focus areas for review': {e}")
                 if gfm_supported:
                     markdown_text += f"</td></tr>\n"
+        elif "todo sections" in key_nice.lower():
+            markdown_text += f"<tr><td>{emoji}&nbsp;<strong>ToDo sections</strong><br><br>\n<ul>"
+            for item in value:
+                markdown_text += f"<li>{item.get("relevant_file")} (lines {item.get("start_line")}-{item.get("end_line")}) - {item.get("todo_content")}</li>\n"
+            markdown_text += "</ul></td></tr>\n"
         else:
             if gfm_supported:
                 markdown_text += f"<tr><td>"
