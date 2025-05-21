@@ -34,6 +34,7 @@ from pr_agent.tools.ticket_pr_compliance_check import (
 )
 
 from pr_agent.algo.pr_processing import get_todo_sections
+from pr_agent.git_providers import EDIT_TYPE
 
 
 class PRReviewer:
