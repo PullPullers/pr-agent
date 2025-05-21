@@ -271,7 +271,7 @@ def convert_to_markdown_v2(output_data: dict,
         elif "todo sections" in key_nice.lower():
             markdown_text += f"<tr><td>{emoji}&nbsp;<strong>ToDo sections</strong><br><br>\n<ul>"
             for item in value:
-                markdown_text += f"<li>{item}</li>\n"
+                markdown_text += f"<li>{item.get("relevant_file")} (lines {item.get("start_line")}-{item.get("end_line")}) - {item.get("todo_content")}</li>\n"
             markdown_text += "</ul></td></tr>\n"
         else:
             if gfm_supported:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import traceback
 from typing import Callable, List, Tuple
 
@@ -8,7 +7,7 @@ from github import RateLimitExceededException
 
 from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.algo.git_patch_processing import (
-    extend_patch, extract_hunk_headers, handle_patch_deletions,
+    extend_patch, handle_patch_deletions,
     decouple_and_convert_to_hunks_with_lines_numbers)
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
@@ -541,31 +540,3 @@ def add_ai_summary_top_patch(file, full_extended_patch):
         get_logger().error(f"Failed to add AI summary to the top of the patch: {e}",
                            artifact={"traceback": traceback.format_exc()})
         return full_extended_patch
-
-def get_todo_sections(patch_str: str, file_name: str) -> list[str]:
-    """
-    Extracts TODO sections from the given patch and returns them as a list of strings,
-    each representing the file name, line number, and TODO comment content.
-    """
-    def extract_starting_line_number(first_line: str) -> int:
-        RE_HUNK_HEADER = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
-        match = RE_HUNK_HEADER.match(first_line)
-        if match:
-            return extract_hunk_headers(match)[3] - 1
-        return -1
-    
-    todo_sections = []
-    start_line, *lines = patch_str.splitlines()
-    current_line_number = extract_starting_line_number(start_line)
-    TODO_PATTERN = re.compile(r'^\+\s*.*TODO\s*(.*)')
-
-    for line in lines:
-        if line.startswith("-"):
-            continue
-        current_line_number += 1
-        match = TODO_PATTERN.search(line)
-        if match:
-            todo_sections.append(f"{file_name}:{current_line_number} - {match.group()[1:].strip()}") 
-
-    return todo_sections
-    
