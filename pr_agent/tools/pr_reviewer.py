@@ -86,6 +86,7 @@ class PRReviewer:
             "require_estimate_effort_to_review": get_settings().pr_reviewer.require_estimate_effort_to_review,
             'require_can_be_split_review': get_settings().pr_reviewer.require_can_be_split_review,
             'require_security_review': get_settings().pr_reviewer.require_security_review,
+            'require_todo_scan': get_settings().pr_reviewer.require_todo_scan,
             'question_str': question_str,
             'answer_str': answer_str,
             "extra_instructions": get_settings().pr_reviewer.extra_instructions,
@@ -213,6 +214,9 @@ class PRReviewer:
             system=system_prompt,
             user=user_prompt
         )
+
+        # AI 모델의 응답을 로깅
+        print(f"AI model response: {response}")
 
         return response
 
