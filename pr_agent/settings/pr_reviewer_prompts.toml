@@ -72,6 +72,25 @@ class KeyIssuesComponentLink(BaseModel):
     start_line: int = Field(description="The start line that corresponds to this issue in the relevant file")
     end_line: int = Field(description="The end line that corresponds to this issue in the relevant file")
 
+class TodoSection(BaseModel):
+    file: str = Field(description="The full relative path of the source code file where the TODO comment appears (e.g., 'src/main.py').")
+    line: int = Field(description="The 1-based line number in the file where the TODO comment is located. Only include TODOs that are part of added lines (starting with '+') in the PR code diff.")
+    content: str = Field(description="""
+The actual text content of the TODO comment, with any prefix like 'TODO', 'FIXME', 'NOTE', etc. removed. 
+Only include comments that clearly indicate a task, reminder, or work-in-progress item intended for future implementation or improvement.
+Valid TODOs must appear inside **comment syntax** in the respective programming language (e.g., `#`, `//`, `/*`, `<!--`, etc.).
+
+Filter rules:
+- Do NOT include non-commented lines (e.g., string literals or regular code lines that contain 'TODO')
+- Ignore empty comments, whitespace-only comments, or malformed lines
+- DO NOT fabricate or rewrite TODOs — copy the exact message following the prefix
+- Skip comments like `#` or `//` alone without any content
+
+Examples of valid `content`:
+- "Add error handling here"
+- "Refactor to use async calls"
+- "Handle edge case when input is None"
+""")
 {%- if related_tickets %}
 
 class TicketCompliance(BaseModel):
@@ -101,6 +120,9 @@ class Review(BaseModel):
     key_issues_to_review: List[KeyIssuesComponentLink] = Field("A short and diverse list (0-3 issues) of high-priority bugs, problems or performance concerns introduced in the PR code, which the PR reviewer should further focus on and validate during the review process.")
 {%- if require_security_review %}
     security_concerns: str = Field(description="Does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' (without explaining why) if there are no possible issues. If there are security concerns or issues, start your answer with a short header, such as: 'Sensitive information exposure: ...', 'SQL injection: ...' etc. Explain your answer. Be specific and give examples if possible")
+{%- endif %}
+{%- if require_todo_scan %}
+    todo_sections: Union[List[TodoSection], str] = Field(description="A list of TODO comments found in the code. Answer 'No' (without explaining why) if there are no TODO comments.")
 {%- endif %}
 {%- if require_can_be_split_review %}
     can_be_split: List[SubPR] = Field(min_items=0, max_items=3, description="Can this PR, which contains {{ num_pr_files }} changed files in total, be divided into smaller sub-PRs with distinct tasks that can be reviewed and merged independently, regardless of the order ? Make sure that the sub-PRs are indeed independent, with no code dependencies between them, and that each sub-PR represent a meaningful independent task. Output an empty list if the PR code does not need to be split.")
@@ -147,6 +169,8 @@ review:
       end_line: 14
     - ...
   security_concerns: |
+    No
+  todo_sections: |
     No
 {%- if require_can_be_split_review %}
   can_be_split:
@@ -265,6 +289,8 @@ review:
       end_line: ...
     - ...
   security_concerns: |
+    No
+  todo_sections: |
     No
 {%- if require_can_be_split_review %}
   can_be_split:
