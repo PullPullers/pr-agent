@@ -76,6 +76,7 @@ require_tests_review=true
 require_estimate_effort_to_review=true
 require_can_be_split_review=false
 require_security_review=true
+require_todo_scan=true
 require_ticket_analysis_review=true
 # general options
 persistent_comment=true
