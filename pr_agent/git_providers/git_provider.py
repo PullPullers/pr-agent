@@ -285,6 +285,15 @@ class GitProvider(ABC):
 
     def get_comment_url(self, comment) -> str:
         return ""
+    
+    def get_review_comment_by_id(self, comment_id: int):
+        pass
+        
+    def get_review_id_by_comment_id(self, comment_id: int):
+        pass
+        
+    def get_review_thread_comments(self, comment_id: int):
+        pass
 
     #### labels operations ####
     @abstractmethod

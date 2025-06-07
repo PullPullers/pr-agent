@@ -15,6 +15,7 @@ from pr_agent.tools.pr_reviewer import PRReviewer
 
 
 def is_true(value: Union[str, bool]) -> bool:
+    # TODO : test
     if isinstance(value, bool):
         return value
     if isinstance(value, str):

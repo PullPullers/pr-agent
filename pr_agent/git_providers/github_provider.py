@@ -428,6 +428,130 @@ class GithubProvider(GitProvider):
             except Exception as e:
                 get_logger().error(f"Failed to publish inline code comments fallback, error: {e}")
                 raise e
+        
+    def get_review_comment_by_id(self, comment_id: int):
+        """
+        Retrieves a review comment by its ID.
+        
+        Args:
+            comment_id: Review comment ID
+            
+        Returns:
+            Review comment object or None (if not found)
+        """
+        try:
+            # Using PyGitHub library
+            # There's no direct way to get PR comment by ID, so we fetch all comments and filter
+            all_comments = list(self.pr.get_comments())
+            for comment in all_comments:
+                if comment.id == comment_id:
+                    return comment
+            return None
+        except Exception as e:
+            get_logger().warning(f"Failed to get review comment {comment_id}, error: {e}")
+            return None
+            
+    def get_review_id_by_comment_id(self, comment_id: int):
+        """
+        Finds the review ID that a comment belongs to based on its comment ID.
+        
+        Args:
+            comment_id: Review comment ID
+            
+        Returns:
+            Review ID or None (if not found)
+        """
+        try:
+            comment = self.get_review_comment_by_id(comment_id)
+            if comment:
+                return getattr(comment, 'pull_request_review_id', None)
+            return None
+        except Exception as e:
+            get_logger().warning(f"Failed to get review ID for comment {comment_id}, error: {e}")
+            return None
+    
+    def get_review_thread_comments(self, comment_id: int):
+        """
+        Retrieves all comments in the thread that a specific comment belongs to.
+        
+        Args:
+            comment_id: Review comment ID
+            
+        Returns:
+            List of comments in the same thread
+        """
+        try:
+            # Get comment information
+            comment = self.get_review_comment_by_id(comment_id)
+            if not comment:
+                return []
+            
+            # get all comments
+            all_comments = list(self.pr.get_comments())
+            
+            # Filter comments in the same thread
+            thread_comments = []
+            in_reply_to_map = {}
+            
+            # First build the in_reply_to relationship map
+            for c in all_comments:
+                in_reply_to_id = getattr(c, 'in_reply_to_id', None)
+                if in_reply_to_id:
+                    in_reply_to_map[c.id] = in_reply_to_id
+            
+            # Recursively find all ancestor comments (collect comment's ancestors)
+            def find_ancestors(cid):
+                ancestors = []
+                current = cid
+                while current in in_reply_to_map:
+                    parent_id = in_reply_to_map[current]
+                    ancestors.append(parent_id)
+                    current = parent_id
+                return ancestors
+            
+            # Recursively find all descendant comments (collect all replies to the comment)
+            def find_descendants(cid):
+                descendants = []
+                for c in all_comments:
+                    if getattr(c, 'in_reply_to_id', None) == cid:
+                        descendants.append(c.id)
+                        descendants.extend(find_descendants(c.id))
+                return descendants
+                
+            # Find all descendants of a specific ancestor (including sibling comments)
+            def find_all_descendants_of_ancestor(ancestor_id):
+                all_descendants = []
+                for c in all_comments:
+                    if getattr(c, 'in_reply_to_id', None) == ancestor_id:
+                        all_descendants.append(c.id)
+                        all_descendants.extend(find_descendants(c.id))
+                return all_descendants
+            
+            # Collect both ancestor and descendant IDs of the comment
+            ancestors = find_ancestors(comment_id)
+            descendants = find_descendants(comment_id)
+            
+            # Create thread ID set (self, ancestors, descendants)
+            thread_ids = set([comment_id] + ancestors + descendants)
+            
+            # For each ancestor, include all conversation branches (sibling comments with the same ancestor)
+            for ancestor_id in ancestors:
+                sibling_ids = find_all_descendants_of_ancestor(ancestor_id)
+                thread_ids.update(sibling_ids)
+            
+            # Filter to only get comments belonging to the thread
+            for c in all_comments:
+                if c.id in thread_ids:
+                    thread_comments.append(c)
+            
+            # Sort chronologically (by creation date)
+            thread_comments.sort(key=lambda c: c.created_at)
+            
+            return thread_comments
+                
+        except Exception as e:
+            get_logger().warning(f"Failed to get review thread comments for comment {comment_id}, error: {e}")
+            return []
 
     def _publish_inline_comments_fallback_with_verification(self, comments: list[dict]):
         """
